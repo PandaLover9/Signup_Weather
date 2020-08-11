@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 
-mongoose.connect(process.env.MONGODB_URL, {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect("mongodb+srv://admin-YongSheng:092107@cluster0.h1r8j.mongodb.net/signUpUserDB", {useNewUrlParser: true, useUnifiedTopology: true});
 mongoose.set("useCreateIndex", true);
 
 
@@ -35,12 +35,11 @@ app.get("/", function(req, res){
 
   //weather API
   const defaultCity = "Singapore";
-
+  const apikey = "b29ace636c42b24520b21f5585fd1d77"
   const units = "metric";
-  const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + process.env.APIKEY + "&units=" + units;
+  const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + "b29ace636c42b24520b21f5585fd1d77" + "&units=" + units;
   https.get(url, function(response){
     console.log(response.statusCode);
-
     response.on("data", function(data){
       const weatherdata = JSON.parse(data);
       const temp = weatherdata.main.temp;
