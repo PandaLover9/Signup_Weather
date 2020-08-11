@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
@@ -15,6 +17,7 @@ app.use(bodyParser.urlencoded({
 
 mongoose.connect(process.env.MONGODB_URL, {useNewUrlParser: true, useUnifiedTopology: true});
 mongoose.set("useCreateIndex", true);
+
 
 const signupSchema = new mongoose.Schema ({
   firstname: String,
@@ -35,7 +38,6 @@ app.get("/", function(req, res){
 
   const units = "metric";
   const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + process.env.APIKEY + "&units=" + units;
-
   https.get(url, function(response){
     console.log(response.statusCode);
 
