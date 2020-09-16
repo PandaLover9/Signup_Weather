@@ -1,1 +1,22 @@
-<h1>Registered successfully!!!</h1>
+<%- include("partials/header") %>
+
+<body class="text-center">
+    <form action= "/register" class="form-signin" method = "post">
+      
+      <h1 class="h3 mb-3 font-weight-normal">Sign Up to my Newsletter</h1>
+      <input type="text" name="firstname" class="form-control top" placeholder="First Name" required autofocus>
+      <input type="text" name="lastname" class="form-control middle-1" placeholder="Last Name" required>
+      <input type="email"  name="email" class="form-control middle-2" placeholder="Email" required>
+      <input type="password"  name="password" class="form-control bottom" placeholder="Password" required>
+  
+      <button class="btn btn-lg btn-primary btn-block" type="submit">Sign Up</button>
+      
+      <div class="">
+        <h3>The weather is currently <%=description%> </h3>
+        <p>The temperature in <%=country%> is <%=temp%> degrees Celcius.</p>
+        <img src=<%=url%> alt="">
+      </div>
+      
+    </form>
+
+    <%- include("partials/footer") %>
