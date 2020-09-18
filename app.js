@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 /********************** MongoDB ****************************/
-mongoose.connect("mongodb://localhost:27017/signUpUserDB", {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect("mongodb://localhost:27017/signUpUserDB", {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: true});
 mongoose.set("useCreateIndex", true);
 
 //listEmail as foreign key to User Schema
@@ -285,9 +285,10 @@ app.post("/todolist", function(req,res){
 app.post("/delete", function(req, res){
   const itemId = req.body.checkId;
 
-  User.findByIdAndDelete(itemId, function(err){
+  User.findOneAndUpdate({email: email}, {$pull: {todoItem: {_id: itemId}}}, function(err){
     if(!err){
       console.log("successfully deleted the item.");
+      console.log(itemId);
       res.redirect("/todolist");
     }
     else{
