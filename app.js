@@ -19,16 +19,7 @@ app.use(bodyParser.urlencoded({
 mongoose.connect("mongodb://localhost:27017/signUpUserDB", {useNewUrlParser: true, useUnifiedTopology: true});
 mongoose.set("useCreateIndex", true);
 
-
-const signupSchema = new mongoose.Schema ({
-  firstname: String,
-  lastname: String,
-  email: String,
-  password: String
-});
-
-const User = new mongoose.model("user", signupSchema);
-
+//listEmail as foreign key to User Schema
 const ItemSchema = new mongoose.Schema ({
   itemName: String
 });
@@ -38,17 +29,27 @@ const Item = mongoose.model("Item", ItemSchema);
 //default item to show how to do with to do list
 const item1 = new Item({
   itemName: "Welcome to your todolist."
-});
+  });
 
-const item2 = new Item({
+  const item2 = new Item({
   itemName: "Hit the add button to add a new to-do item."
-});
+  });
 
-const item3 = new Item({
+  const item3 = new Item({
   itemName: "Hit the delete button to delete a to-do item."
+  });
+
+  const defaultItems = [item1, item2, item3];
+
+const signupSchema = new mongoose.Schema ({
+  firstname: String,
+  lastname: String,
+  email: String,
+  password: String,
+  todoItem: [ItemSchema]
 });
 
-const defaultItems = [item1, item2, item3];
+const User = new mongoose.model("user", signupSchema);
 
 
 /********************** weather information ****************************/
@@ -157,15 +158,16 @@ app.get("/login", function(req, res){
     });
   });
 });
+var email;
+var password;
 
 app.post("/login", function(req,res){
-    const email =  req.body.login_email;
-    const password =  req.body.login_password;
+    email =  req.body.login_email;
+    password =  req.body.login_password;
 
     console.log(email + " " + password);
 
     User.findOne({email: email}, function(err, foundUser){
-      console.log(foundUser);
       if(err) {
         console.log(err);
       }
@@ -174,6 +176,7 @@ app.post("/login", function(req,res){
         if(foundUser){
           //** password checking **//
           if(foundUser.password == password){
+            
             res.redirect("/todolist");
           }
           else{
@@ -221,88 +224,68 @@ app.get("/todolist", function(req,res){
   var units = "metric";
   var url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + process.env.APIKEY + "&units=" + units;
 
-  //check is to do list empty
-  Item.find({}, function(err, foundItems) {
+  console.log("Welcome, " + email);
 
-    console.log(foundItems);
-    if(foundItems.length === 0){
-      Item.insertMany(defaultItems, function(err) {
-        if(err){
-          console.log(err);
-          res.sendStatus(err.statusCode);
-        }
-        else{
-          console.log("sucessfully saved default items to DB.");
-        }
-      });
-      res.redirect("/todolist");
-    }
-    else{
-      res.render("todolist", {newListItems: foundItems});
-    }
-  })
+    User.findOne({email: email}, function(err, foundUser){
+      if(!err){
+          if(foundUser){
+            res.render("todolist", {newListItems: foundUser.todoItem});
+          }
+          else{
+            console.log("No such user found, please log in again.");
+            res.redirect("//login");
+          }
+      }
+      else{
+        console.log(err);
+        res.sendStatus(err);
+        res.redirect("/todolist")
+      }
+      
 
-  // https.get(url, function(response){
-  //   console.log(response.statusCode);
-  //   response.on("data", function(data){
-  //     var weatherdata = JSON.parse(data);
-  //     var temp = weatherdata.main.temp;
-  //     var description = weatherdata.weather[0].description;
-  //     var country = weatherdata.name;
-  //     var icon = weatherdata.weather[0].icon;
-  //     var imageurl = "http://openweathermap.org/img/wn/" + icon + "@2x.png";
-  //     console.log(temp);
-  //     res.render("todolist",
-  //     {description: description,
-  //       country: defaultCity,
-  //       temp: temp,
-  //       url: imageurl});
-  //   });
-  // });
-})
+    })
+});
 
 app.post("/todolist", function(req,res){
   const newItem =  req.body.newItem;
-  const listname = req.body.list;
 
   //insert new to-do-item
-  let item = new Item();
-
-  item.itemName = newItem;
-  item.save(function() {
-    res.redirect("/todolist");
+  const item = new Item({
+    itemName: newItem
   });
 
-  console.log(newItem);
+  //find user_id
+  User.findOne({email: email}, function(err, foundUser){
+    
+    if(!err)
+    {
+      if(!foundUser){
+        console.log("No such user found, please log in again.");
+        res.redirect("/todolist");
+    }
+      else{
+          foundUser.todoItem.push(item);
+          foundUser.save();
+          res.redirect("/todolist");
+      }
+    }
+    else{
+      console.log(err);
+      res.sendStatus(err);
+      res.redirect("/login");
+    }
+    
+  })
 
   const defaultCity = "Singapore";
   const units = "metric";
   const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + process.env.APIKEY + "&units=" + units;
-
-  // https.get(url, function(response){
-  //   console.log(response.statusCode);
-  //   response.on("data", function(data){
-  //     const weatherdata = JSON.parse(data);
-  //     const temp = weatherdata.main.temp;
-  //     const description = weatherdata.weather[0].description;
-  //     const country = weatherdata.name;
-  //     const icon = weatherdata.weather[0].icon;
-  //     const imageurl = "http://openweathermap.org/img/wn/" + icon + "@2x.png";
-  //     console.log(temp);
-  //     res.render("todolist",
-  //     {description: description,
-  //       country: defaultCity,
-  //       temp: temp,
-  //       url: imageurl});
-  //   });
-  // });
-  //res.redirect("/todolist");
 });
 
 app.post("/delete", function(req, res){
   const itemId = req.body.checkId;
 
-  Item.findByIdAndDelete(itemId, function(err){
+  User.findByIdAndDelete(itemId, function(err){
     if(!err){
       console.log("successfully deleted the item.");
       res.redirect("/todolist");
