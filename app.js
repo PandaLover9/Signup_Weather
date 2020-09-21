@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 /********************** MongoDB ****************************/
-mongoose.connect(process.env.MONGODB_URL, {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: true});
+mongoose.connect("mongodb+srv://admin-YongSheng:092107@cluster0.h1r8j.mongodb.net/signUpUserDB", {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: true});
 mongoose.set("useCreateIndex", true);
 
 //listEmail as foreign key to User Schema
@@ -52,7 +52,7 @@ var imageurl;
 app.get("/", function(req, res){
   const defaultCity = "Singapore";
   const units = "metric";
-  const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + process.env.APIKEY + "&units=" + units;
+  const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + "b29ace636c42b24520b21f5585fd1d77" + "&units=" + units;
 
   https.get(url, function(response){
     console.log(response.statusCode);
@@ -95,7 +95,7 @@ app.get("/", function(req, res){
 app.get("/register", function(req, res){
   const defaultCity = "Singapore";
   const units = "metric";
-  const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + process.env.APIKEY + "&units=" + units;
+  const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + "b29ace636c42b24520b21f5585fd1d77" + "&units=" + units;
 
   https.get(url, function(response){
     console.log(response.statusCode);
@@ -158,7 +158,7 @@ app.post("/register", function(req, res){
 app.get("/login", function(req, res){
   const defaultCity = "Singapore";
   const units = "metric";
-  const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + process.env.APIKEY + "&units=" + units;
+  const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + "b29ace636c42b24520b21f5585fd1d77" + "&units=" + units;
 
   https.get(url, function(response){
     console.log(response.statusCode);
@@ -231,7 +231,7 @@ app.post("/login", function(req,res){
 app.get("/failed", function(req, res){
   const defaultCity = "Singapore";
   const units = "metric";
-  const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + process.env.APIKEY + "&units=" + units;
+  const url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + "b29ace636c42b24520b21f5585fd1d77" + "&units=" + units;
 
   https.get(url, function(response){
     console.log(response.statusCode);
@@ -257,7 +257,7 @@ app.get("/failed", function(req, res){
 app.get("/todolist", function(req, res){
   var defaultCity = "Singapore";
   var units = "metric";
-  var url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + process.env.APIKEY + "&units=" + units + "exclude=current";
+  var url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + "b29ace636c42b24520b21f5585fd1d77" + "&units=" + units + "exclude=current";
 
  
   console.log("Welcome, " + email);
