@@ -102,9 +102,9 @@ app.get("/register", function(req, res){
       weatherdata = JSON.parse(data);
       currentTime = weatherdata.dt;
 
-      var date = new Date(currentTime * 1000).toLocaleString('en-US', { timeZone: 'Asia/Singapore' });
+      var date = new Date(currentTime * 1000);
       // Hours part from the timestamp
-      var hours = date.getHours();
+      var hours = date.getHours() + 8;
       // Minutes part from the timestamp
       var minutes = "0" + date.getMinutes();
 
@@ -163,9 +163,9 @@ app.get("/login", function(req, res){
       weatherdata = JSON.parse(data);
       currentTime = weatherdata.dt;
 
-      var date = new Date(currentTime * 1000).toLocaleString('en-US', { timeZone: 'Asia/Singapore' });
+      var date = new Date(currentTime * 1000);
       // Hours part from the timestamp
-      var hours = date.getHours();
+      var hours = date.getHours() + 8;
       // Minutes part from the timestamp
       var minutes = "0" + date.getMinutes();
 
