@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 /********************** MongoDB ****************************/
-mongoose.connect("mongodb://localhost:27017/signUpUserDB", {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: true});
+mongoose.connect(process.env.MONGODB_URL, {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: true});
 mongoose.set("useCreateIndex", true);
 
 //listEmail as foreign key to User Schema
@@ -123,7 +123,7 @@ app.get("/register", function(req, res){
       {description: description,
        country: defaultCity,
        temp: temp,
-       url1: imageurl,
+       url: imageurl,
        time: formattedTime});
     });
 })
