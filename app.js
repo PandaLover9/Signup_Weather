@@ -7,16 +7,32 @@ const mongoose = require("mongoose");
 const https = require("https");
 const swal = require('sweetalert');
 
+const session = require('express-session');
+const passport = require("passport");
+const passportLocalMongoose = require("passport-local-mongoose");
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const findOrCreate = require('mongoose-findorcreate');
+
 const app = express();
 
+//Middleware
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({
   extended: true
 }));
 
+app.use(session({
+  secret: "Our little secret.",
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 /********************** MongoDB ****************************/
-mongoose.connect("mongodb+srv://admin-YongSheng:092107@cluster0.h1r8j.mongodb.net/signUpUserDB", {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: true});
+mongoose.connect("mongodb://localhost:27017/signUpUserDB", {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: true});
 mongoose.set("useCreateIndex", true);
 
 //listEmail as foreign key to User Schema
@@ -30,12 +46,55 @@ const signupSchema = new mongoose.Schema ({
   firstname: String,
   lastname: String,
   email: String,
+  googleId: String,
   password: String,
   todoItem: [ItemSchema]
 });
 
+signupSchema.plugin(passportLocalMongoose);
+signupSchema.plugin(findOrCreate);
+
 const User = new mongoose.model("user", signupSchema);
 
+/************************Google API *****************************/
+passport.use(User.createStrategy());
+
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+  User.findById(id, function(err, user) {
+    done(err, user);
+  });
+});
+
+//userProfileURL is to tackle Google Plus API deprecation
+passport.use(new GoogleStrategy({
+    clientID: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/google/todolist",
+    userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
+  },
+  function(accessToken, refreshToken, profile, cb) {
+    console.log(profile);
+
+    User.findOrCreate({ googleId: profile.id , firstname: profile.name.givenName,  lastname: profile.name.familyName}, function (err, user) {
+      return cb(err, user);
+    });
+  }
+));
+
+app.get("/auth/google",
+  passport.authenticate('google', { scope: ["profile"] })
+);
+
+app.get("/auth/google/todolist",
+  passport.authenticate('google', { failureRedirect: "/login" }),
+  function(req, res) {
+    // Successful authentication, redirect to todolist.
+    res.redirect("/todolist");
+  });
 
 /********************** weather information ****************************/
 
@@ -45,7 +104,6 @@ var temp;
 var description;
 var icon;
 var imageurl;
-
 
 
 /************************ Home Route *******************/
@@ -85,7 +143,6 @@ app.get("/", function(req, res){
   });
 
 });
-
 
 /*********************************************************/
 
@@ -148,8 +205,8 @@ app.post("/register", function(req, res){
   
 
 });
-
 /*********************************************************/
+
 
 /************************ Login Route *******************/
 app.get("/login", function(req, res){
@@ -189,7 +246,8 @@ app.get("/login", function(req, res){
 
 //global variable to check email
 var email;
-var password;
+var googleId;
+var firstname;
 
 app.post("/login", function(req,res){
     email =  req.body.login_email;
@@ -201,6 +259,7 @@ app.post("/login", function(req,res){
       }
       else{
         //** email checking **//
+        passport.authenticate("local")(req, res, function(){
         if(foundUser){
           //** password checking **//
           if(foundUser.password == password){
@@ -217,11 +276,12 @@ app.post("/login", function(req,res){
           
           res.redirect("/login");
         }
-      }
+      })
+    }
     });
 });
-
 /*********************************************************/
+
 
 app.get("/failed", function(req, res){
   const defaultCity = "Singapore";
@@ -254,9 +314,8 @@ app.get("/todolist", function(req, res){
   var units = "metric";
   var url = "https://api.openweathermap.org/data/2.5/weather?q=" + defaultCity +"&appid=" + "b29ace636c42b24520b21f5585fd1d77" + "&units=" + units + "exclude=current";
 
- 
-  console.log("Welcome, " + email);
-
+  if(email != ""){
+    console.log("Welcome, " + email);
     User.findOne({email: email}, function(err, foundUser){
       if(!err){
           if(foundUser){
@@ -264,7 +323,7 @@ app.get("/todolist", function(req, res){
           }
           else{
             console.log("No such user found, please log in again.");
-            res.redirect("//login");
+            res.redirect("/login");
           }
       }
       else{
@@ -272,9 +331,30 @@ app.get("/todolist", function(req, res){
         res.sendStatus(err);
         res.redirect("/todolist")
       }
-      
-
     })
+    }
+    else{
+      console.log("Welcome, " + firstname);
+      User.findOne({googleId: googleId}, function(err, foundUser){
+        if(!err){
+            if(foundUser){
+              res.render("todolist", {newListItems: foundUser.todoItem});
+            }
+            else{
+              console.log("No such user found, please log in again.");
+              res.redirect("/login");
+            }
+        }
+        else{
+          console.log(err);
+          res.sendStatus(err);
+          res.redirect("/todolist")
+        }
+      })
+    }
+  
+
+    
 });
 
 app.post("/todolist", function(req,res){
@@ -309,7 +389,7 @@ app.post("/todolist", function(req,res){
   })
 });
 
-/******************************************************/
+/*****************************************************************/
 
 app.post("/delete", function(req, res){
   const itemId = req.body.checkId;
@@ -326,6 +406,11 @@ app.post("/delete", function(req, res){
   })
 });
 
+app.get("/logout", function(req, res){
+  req.logout();
+  res.redirect("/");
+});
+
 
 
 
@@ -339,4 +424,4 @@ app.listen(port, function() {
   console.log("Server started on port 3000.");
 });
 
-
+//Google FB API, Google Auth20, Hashing Salting pw, Header home, register, login, Logout Cookies Session
